@@ -1,0 +1,5 @@
+---
+interface Props { ratio?: string }
+const { ratio } = Astro.props;
+---
+<div class="pair" style={ratio ? `--ratio:${ratio}` : undefined}><slot /></div>

@@ -1,0 +1,61 @@
+---
+import '@fontsource-variable/big-shoulders/opsz.css';
+import '@fontsource-variable/atkinson-hyperlegible-next';
+import '@fontsource-variable/atkinson-hyperlegible-mono';
+import '../styles/global.css';
+import { site } from '../site.config';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  wire?: string;
+}
+const { title, description = site.description, image, wire = 'green' } = Astro.props;
+const fullTitle = title ? `${title} | ${site.name}` : `${site.name}: build notes`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = image ? new URL(image, Astro.site) : undefined;
+const path = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={site.name} href="/rss.xml" />
+    <meta property="og:title" content={title ?? site.name} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:type" content={title ? 'article' : 'website'} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    <meta name="theme-color" content="#e7ebee" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111820" media="(prefers-color-scheme: dark)" />
+  </head>
+  <body class={`wire-${wire}`}>
+    <a class="sr-only" href="#main">Skip to content</a>
+    <header class="wrap site-head">
+      <a class="wordmark" href="/">{site.name}</a>
+      <nav class="site-nav" aria-label="Site">
+        <a href="/" aria-current={path === '/' ? 'page' : undefined}>Projects</a>
+        <a href="/about/" aria-current={path.startsWith('/about') ? 'page' : undefined}>About</a>
+        <a href="/rss.xml">RSS</a>
+      </nav>
+    </header>
+    <main id="main" class="wrap">
+      <slot />
+    </main>
+    <footer class="wrap">
+      <div class="site-foot">
+        <span>© {new Date().getFullYear()} {site.name}. Build anything here; tell me how it went.</span>
+        <span><a href={site.github}>GitHub</a>&emsp;<a href="/rss.xml">RSS</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

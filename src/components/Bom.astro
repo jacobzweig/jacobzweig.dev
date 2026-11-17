@@ -1,0 +1,24 @@
+---
+// Bill of materials. items: [{ part, qty, price?, href?, note? }]
+interface Item { part: string; qty: number | string; price?: number; href?: string; note?: string }
+interface Props { items: Item[]; currency?: string }
+const { items, currency = '$' } = Astro.props;
+const priced = items.filter((i) => typeof i.price === 'number');
+const total = priced.reduce((a, i) => a + (i.price as number) * (typeof i.qty === 'number' ? i.qty : 1), 0);
+const money = (n: number) => `${currency}${n.toFixed(2)}`;
+---
+<div class="table-scroll">
+  <table>
+    <thead><tr><th>Part</th><th class="num">Qty</th><th class="num">Each</th></tr></thead>
+    <tbody>
+      {items.map((i) => (
+        <tr>
+          <td>{i.href ? <a href={i.href}>{i.part}</a> : i.part}{i.note && <span class="muted"><br />{i.note}</span>}</td>
+          <td class="num">{i.qty}</td>
+          <td class="num">{typeof i.price === 'number' ? money(i.price) : ''}</td>
+        </tr>
+      ))}
+    </tbody>
+    {priced.length > 0 && <tfoot><tr><td>Total</td><td></td><td class="num">about {money(total)}</td></tr></tfoot>}
+  </table>
+</div>

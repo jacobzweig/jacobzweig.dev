@@ -1,0 +1,37 @@
+---
+// The H70A3's 5-pin connector drawn from both sides, because the two views are
+// mirror images and that is the easiest way to get this build wrong.
+const pins = [
+  { n: 1, x: -1.475, y: -1.6, fill: '#1b242e', name: 'Ground' },
+  { n: 2, x: 1.475, y: -1.6, fill: '#14906a', name: 'Data' },
+  { n: 3, x: -2.95, y: 1.3, fill: '#f5f7f8', name: 'Cool white' },
+  { n: 4, x: 0, y: 1.3, fill: '#e9c21a', name: 'Warm white' },
+  { n: 5, x: 2.95, y: 1.3, fill: '#d8343f', name: '+36 V' },
+];
+const views = [
+  { title: 'Mating face', sub: 'looking into the sockets, notch up', flip: 1 },
+  { title: 'Wire side', sub: 'what you see while inserting terminals', flip: -1 },
+];
+---
+<figure class="pinfaces">
+  <div class="pinfaces-row">
+    {views.map((v) => (
+      <div>
+        <svg viewBox="-7 -6.6 14 12.6" role="img" aria-label={`${v.title}: ${pins.map((p) => `pin ${p.n} ${p.name}`).join(', ')}`}>
+          <path d="M -3.0 3.93 A 4.9 4.9 0 1 1 3.0 3.93 Z" fill="var(--bench)" stroke="var(--ink)" stroke-width="0.22" />
+          <rect x="-0.7" y="-5.1" width="1.4" height="1.0" fill="var(--vellum)" stroke="var(--ink)" stroke-width="0.22" />
+          {pins.map((p) => (
+            <g>
+              <circle cx={p.x * v.flip} cy={p.y} r="0.82" fill={p.fill} stroke="var(--ink)" stroke-width="0.18" />
+              <text x={p.x * v.flip} y={p.y + (p.y < 0 ? -1.25 : 2.0)} text-anchor="middle" font-size="1.05" font-weight="700" fill="var(--ink)">{p.n}</text>
+            </g>
+          ))}
+        </svg>
+        <p><strong>{v.title}</strong><br />{v.sub}</p>
+      </div>
+    ))}
+  </div>
+  <figcaption>
+    Black is ground, green is data, white is cool white, yellow is warm white, red is +36 V. From the wire side everything swaps left to right: red goes bottom left.
+  </figcaption>
+</figure>

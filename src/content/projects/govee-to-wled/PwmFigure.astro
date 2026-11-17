@@ -1,0 +1,40 @@
+---
+// Why dimmed white breaks colour: count the 36 V edges that land inside one frame of data.
+// A 60-pixel WS281x frame is 60 x 24 bits at 1.25 us = 1.8 ms.
+const X0 = 200, PX_PER_MS = 262, FRAME_START = 226, FRAME_MS = 1.8;
+const frameEnd = FRAME_START + FRAME_MS * PX_PER_MS;
+const rows = [
+  { label: '19,531 Hz', sub: 'the default', periodMs: 1 / 19.531, y: 40, count: 'about 70 edges per frame', verdict: 'pixels freeze' },
+  { label: '600 Hz', sub: 'what I use now', periodMs: 1 / 0.6, y: 190, count: 'about 2 edges per frame', verdict: 'mostly clean' },
+];
+const wave = (periodMs: number, y: number) => {
+  const half = (periodMs * PX_PER_MS) / 2;
+  let d = `M ${X0} ${y + 26}`, x = X0 + (half > 100 ? 78 : 0), hi = false;
+  const edges: number[] = [];
+  while (x < 828) { d += ` H ${x} V ${hi ? y + 26 : y}`; edges.push(x); hi = !hi; x += half; }
+  return { d: d + ' H 828', edges: edges.filter((e) => e > FRAME_START && e < frameEnd) };
+};
+---
+<figure class="diagram wide">
+  <div class="diagram-scroll">
+    <svg viewBox="0 0 840 330" role="img" aria-label="Timing diagram comparing white-channel switching at 19,531 hertz and 600 hertz against one 1.8 millisecond frame of pixel data.">
+      {rows.map((r) => {
+        const w = wave(r.periodMs, r.y);
+        return (
+          <g>
+            <text x="0" y={r.y + 16} class="d-strong">{r.label}</text>
+            <text x="0" y={r.y + 36} class="d-small">{r.sub}</text>
+            <text x="0" y={r.y + 78} class="d-small">{r.count}</text>
+            <text x="0" y={r.y + 96} class="d-small">{r.verdict}</text>
+            <path d={w.d} fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linejoin="round" />
+            <rect x={FRAME_START} y={r.y + 58} width={frameEnd - FRAME_START} height="26" rx="3" fill="var(--wire-green)" />
+            {w.edges.map((e) => <path d={`M ${e} ${r.y - 4} V ${r.y + 88}`} stroke="var(--wire-red)" stroke-width={w.edges.length > 10 ? 1 : 2.5} opacity={w.edges.length > 10 ? 0.75 : 1} />)}
+            <text x={X0} y={r.y - 10} class="d-small">white wire, 0 to 36 V</text>
+            <text x={FRAME_START + 10} y={r.y + 76} class="d-onfill">one frame of colour data, 1.8 ms</text>
+          </g>
+        );
+      })}
+    </svg>
+  </div>
+  <figcaption>Each red line is a 36 V edge on the white wire landing in the middle of a data frame. At the default frequency there are about 70 per frame. At 600 Hz, about two.</figcaption>
+</figure>

@@ -1,0 +1,83 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Cover from '../components/Cover.astro';
+import { getProjects, slugOf } from '../lib/projects';
+import { bench, wires } from '../site.config';
+
+const projects = await getProjects();
+const n = projects.length + bench.length;
+// Bench items borrow whichever wire colours the published projects aren't using.
+const spare = wires.filter((w) => !projects.some((p) => p.data.wire === w));
+const colorOf = (i: number) =>
+  i < projects.length
+    ? `var(--wire-${projects[i].data.wire})`
+    : `var(--wire-${(spare.length ? spare : wires)[(i - projects.length) % (spare.length || wires.length)]})`;
+const below = (i: number) => Array.from({ length: n - i - 1 }, (_, k) => i + 1 + k);
+---
+
+<Base>
+  <div class="harness" style={`--n:${n}`}>
+    <div class="h-row h-hero">
+      <div class="h-gutter" style="--row:0" aria-hidden="true">
+        {Array.from({ length: n }, (_, j) => <span class="h-wire" style={`--i:${j};--c:${colorOf(j)}`} />)}
+        <span class="connector"></span>
+      </div>
+      <div class="hero">
+        <h1>Things I built, broke, fixed, and wrote down.</h1>
+        <p>
+          I'm Jacob. Neuroscientist by training, machine learning engineer by trade, and unable to
+          leave anything alone in my free time. These are the projects, written up in enough
+          detail that you can build your own.
+        </p>
+      </div>
+    </div>
+
+    {projects.map((p, i) => (
+      <div class="h-row">
+        <div class="h-gutter" style={`--row:${i + 1}`} aria-hidden="true">
+          {below(i).map((j) => <span class="h-wire" style={`--i:${j};--c:${colorOf(j)}`} />)}
+          <span class="h-wire turn" style={`--i:${i};--c:${colorOf(i)}`} />
+        </div>
+        <article class={`proj wire-${p.data.wire}`}>
+          <div class="proj-text">
+            {p.data.draft && <span class="draft-flag">Draft, not published</span>}
+            <h2><a href={`/projects/${slugOf(p.id)}/`}>{p.data.title}</a></h2>
+            <p class="proj-summary">{p.data.summary}</p>
+            <dl class="facts">
+              {p.data.difficulty && <div><dt>Difficulty</dt><dd>{p.data.difficulty}</dd></div>}
+              {p.data.time && <div><dt>Time</dt><dd>{p.data.time}</dd></div>}
+              {p.data.cost && <div><dt>Cost</dt><dd>{p.data.cost}</dd></div>}
+            </dl>
+          </div>
+          <a class="proj-media" href={`/projects/${slugOf(p.id)}/`} tabindex="-1" aria-hidden="true">
+            {p.data.cover
+              ? <Image src={p.data.cover} alt="" widths={[640, 960, 1400]} sizes="(min-width: 760px) 55vw, 100vw" loading={i === 0 ? 'eager' : 'lazy'} />
+              : <Cover seed={slugOf(p.id)} wire={p.data.wire} />}
+          </a>
+        </article>
+      </div>
+    ))}
+
+    {bench.length > 0 && (
+      <div class="h-row">
+        <div class="h-gutter" style={`--row:${projects.length + 1}`} aria-hidden="true">
+          {below(projects.length - 1).map((j) => <span class="h-wire" style={`--i:${j};--c:${colorOf(j)}`} />)}
+        </div>
+        <p class="bench-lede">Still on the bench, no write-up yet:</p>
+      </div>
+    )}
+    {bench.map((b, k) => {
+      const i = projects.length + k;
+      return (
+        <div class="h-row">
+          <div class="h-gutter" style={`--row:${i + 2}`} aria-hidden="true">
+            {below(i).map((j) => <span class="h-wire" style={`--i:${j};--c:${colorOf(j)}`} />)}
+            <span class="h-wire turn capped" style={`--i:${i};--c:${colorOf(i)}`} />
+          </div>
+          <div class="bench-item"><strong>{b.title}</strong><span>{b.note}</span></div>
+        </div>
+      );
+    })}
+  </div>
+</Base>

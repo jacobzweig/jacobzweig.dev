@@ -1,0 +1,971 @@
+/* ------------------------------------------------------------------
+   Tokens
+   Palette comes from the bench: drafting vellum, graphite, and the
+   insulation colours of hookup wire. Each project owns one wire colour.
+------------------------------------------------------------------- */
+:root {
+  --vellum: #e7ebee;
+  --bench: #f5f7f8;
+  --ink: #121a23;
+  --graphite: #55616e;
+  --rule: #c3ccd3;
+  --housing: #1b242e;
+
+  --wire-red: #d8343f;
+  --wire-amber: #dc9a00;
+  --wire-green: #14906a;
+  --wire-blue: #2d6cdf;
+  --wire-violet: #7b4fd6;
+  --wire-idle: #9aa5af;
+
+  --c: var(--wire-green); /* current wire colour, overridden per project */
+
+  --display: 'Big Shoulders Variable', 'Arial Narrow', sans-serif;
+  --text: 'Atkinson Hyperlegible Next Variable', system-ui, sans-serif;
+  --mono: 'Atkinson Hyperlegible Mono Variable', ui-monospace, monospace;
+
+  --step--1: 0.875rem;
+  --step-0: 1.125rem;
+  --step-1: 1.375rem;
+  --step-2: 1.75rem;
+  --step-3: 2.5rem;
+  --step-4: clamp(2.75rem, 6vw, 4.5rem);
+  --step-5: clamp(3.25rem, 9.5vw, 7.5rem);
+
+  --pad: clamp(16px, 4vw, 40px);
+  --wire-w: 3px;
+  --radius: 3px;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --vellum: #111820;
+    --bench: #18212b;
+    --ink: #e4eaf0;
+    --graphite: #94a1ae;
+    --rule: #2c3743;
+    --housing: #05080b;
+
+    --wire-red: #f0545c;
+    --wire-amber: #f0b429;
+    --wire-green: #25b98a;
+    --wire-blue: #5b93f5;
+    --wire-violet: #9d7bf0;
+    --wire-idle: #5a6672;
+  }
+}
+
+/* ------------------------------------------------------------------ base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 2rem;
+}
+
+body {
+  margin: 0;
+  background: var(--vellum);
+  color: var(--ink);
+  font-family: var(--text);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.005em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0 0 1.1em;
+  text-wrap: pretty;
+}
+
+a {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: var(--c);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+a:hover {
+  text-decoration-thickness: 4px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--wire-blue);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+code,
+kbd,
+pre {
+  font-family: var(--mono);
+  font-size: 0.92em;
+}
+
+.wrap {
+  max-width: 1180px;
+  margin-inline: auto;
+  padding-inline: var(--pad);
+}
+
+.muted {
+  color: var(--graphite);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.wire-red { --c: var(--wire-red); }
+.wire-amber { --c: var(--wire-amber); }
+.wire-green { --c: var(--wire-green); }
+.wire-blue { --c: var(--wire-blue); }
+.wire-violet { --c: var(--wire-violet); }
+.wire-idle { --c: var(--wire-idle); }
+
+/* ---------------------------------------------------------------- header */
+.site-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1.25rem 0.75rem;
+}
+.wordmark {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: var(--step-2);
+  line-height: 1;
+  text-decoration: none;
+}
+.site-nav {
+  display: flex;
+  gap: 1.5rem;
+  font-size: var(--step--1);
+}
+.site-nav a {
+  text-decoration-color: transparent;
+  padding-block: 0.5rem;
+}
+.site-nav a:hover,
+.site-nav a[aria-current='page'] {
+  text-decoration-color: var(--c);
+}
+
+.site-foot {
+  margin-top: 6rem;
+  padding-block: 1.5rem 3rem;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  justify-content: space-between;
+  font-size: var(--step--1);
+  color: var(--graphite);
+}
+
+/* --------------------------------------------------------------- harness
+   The home page's one loud idea: a wiring harness leaves a connector under
+   the wordmark and drops one conductor at each project.
+   --n  number of wires     --i  this row's wire (0 = first to peel off)
+------------------------------------------------------------------------- */
+.harness {
+  --gap: 12px;
+  --gutter: calc(var(--n) * var(--gap) + 34px);
+  --turn: 3.4rem;
+}
+.h-row {
+  display: grid;
+  grid-template-columns: var(--gutter) minmax(0, 1fr);
+}
+.h-gutter {
+  position: relative;
+}
+.h-wire {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc((var(--n) - 1 - var(--i)) * var(--gap));
+  width: var(--wire-w);
+  background: var(--c);
+}
+.h-wire.turn {
+  bottom: auto;
+  height: var(--turn);
+  right: 14px;
+  width: auto;
+  background: none;
+  border-left: var(--wire-w) solid var(--c);
+  border-bottom: var(--wire-w) solid var(--c);
+  border-bottom-left-radius: 16px;
+}
+/* ring terminal at the end of a live wire */
+.h-wire.turn::after {
+  content: '';
+  position: absolute;
+  right: -13px;
+  bottom: calc(-6px - var(--wire-w) / 2);
+  width: 12px;
+  height: 12px;
+  border: var(--wire-w) solid var(--c);
+  border-radius: 50%;
+  background: var(--vellum);
+}
+/* capped end for something still on the bench */
+.h-wire.turn.capped::after {
+  right: -9px;
+  bottom: calc(-5px - var(--wire-w) / 2);
+  width: 9px;
+  height: 10px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--c);
+}
+
+.h-hero .h-wire {
+  top: 20px;
+}
+.connector {
+  position: absolute;
+  top: 0;
+  left: -5px;
+  width: calc((var(--n) - 1) * var(--gap) + var(--wire-w) + 10px);
+  height: 22px;
+  background: var(--bench);
+  border: 2px solid var(--ink);
+  border-radius: 3px 3px 1px 1px;
+}
+
+.hero {
+  padding-block: clamp(1.5rem, 5vw, 4rem) clamp(3rem, 8vw, 6rem);
+}
+.hero h1 {
+  font-size: var(--step-5);
+  font-weight: 900;
+  line-height: 0.88;
+  max-width: 17ch;
+}
+.hero p {
+  margin-top: 1.75rem;
+  max-width: 34rem;
+  font-size: var(--step-1);
+  line-height: 1.45;
+}
+
+/* project rows */
+.proj {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  align-items: start;
+  padding-bottom: clamp(3.5rem, 8vw, 6rem);
+}
+.proj-text {
+  padding-top: calc(var(--turn) - 0.5 * var(--step-4) * 0.95);
+}
+.proj h2 {
+  font-size: var(--step-4);
+}
+.proj h2 a {
+  text-decoration-color: transparent;
+}
+.proj h2 a:hover {
+  text-decoration-color: var(--c);
+}
+.proj-summary {
+  margin-top: 1rem;
+  max-width: 30rem;
+}
+.proj-media {
+  display: block;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--housing);
+}
+.proj-media img,
+.proj-media svg {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.75rem;
+  margin: 1.25rem 0 0;
+  font-size: var(--step--1);
+}
+.facts div {
+  display: flex;
+  gap: 0.5rem;
+}
+.facts dt {
+  color: var(--graphite);
+}
+.facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.draft-flag {
+  display: inline-block;
+  margin-bottom: 0.6rem;
+  padding: 0.1rem 0.5rem;
+  border: 1.5px dashed var(--graphite);
+  border-radius: 2px;
+  font-size: var(--step--1);
+  color: var(--graphite);
+}
+
+.bench-item {
+  padding-top: calc(var(--turn) - 0.85rem);
+  padding-bottom: 1.75rem;
+  color: var(--graphite);
+}
+.bench-item strong {
+  display: block;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: var(--step-2);
+  line-height: 1;
+  color: var(--ink);
+}
+.bench-item span {
+  font-size: var(--step--1);
+}
+.bench-lede {
+  padding-block: 0 0.5rem;
+  font-size: var(--step--1);
+  color: var(--graphite);
+}
+
+/* the single load moment: the harness draws itself, top to bottom */
+@media (prefers-reduced-motion: no-preference) {
+  .h-wire:not(.turn) {
+    transform-origin: top;
+    animation: run 0.3s linear both;
+    animation-delay: calc(var(--row) * 0.3s);
+  }
+  .h-wire.turn {
+    animation: land 0.25s ease-out both;
+    animation-delay: calc(var(--row) * 0.3s + 0.1s);
+  }
+  @keyframes run {
+    from { transform: scaleY(0); }
+  }
+  @keyframes land {
+    from { opacity: 0; }
+  }
+}
+
+@media (max-width: 760px) {
+  .harness {
+    --gap: 7px;
+    --gutter: calc(var(--n) * var(--gap) + 22px);
+    --turn: 2.6rem;
+  }
+  .h-wire.turn {
+    right: 10px;
+    border-bottom-left-radius: 10px;
+  }
+  .proj {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .proj-text {
+    padding-top: calc(var(--turn) - 0.5 * 2.75rem * 0.95);
+  }
+}
+
+/* ---------------------------------------------------------- project page */
+.post-head {
+  padding-block: clamp(1.5rem, 5vw, 3.5rem) 2rem;
+}
+.post-head h1 {
+  font-size: var(--step-5);
+  font-weight: 900;
+  line-height: 0.88;
+  max-width: 14ch;
+}
+.post-head .lede {
+  margin-top: 1.5rem;
+  max-width: 40rem;
+  font-size: var(--step-1);
+  line-height: 1.45;
+}
+
+/* title block, as on an engineering drawing: every cell is a fact */
+.titleblock {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 2rem 0 0;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bench);
+}
+.titleblock div {
+  flex: 1 1 9.5rem;
+  padding: 0.6rem 0.9rem 0.7rem;
+  box-shadow: 0 0 0 0.75px var(--ink);
+}
+.titleblock .wide {
+  flex-basis: 100%;
+}
+.titleblock dt {
+  font-size: 0.78rem;
+  color: var(--graphite);
+}
+.titleblock dd {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.post-cover {
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--housing);
+}
+.post-cover img,
+.post-cover svg {
+  width: 100%;
+  max-height: 70vh;
+  object-fit: cover;
+}
+
+.post-body {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: clamp(1.5rem, 5vw, 4.5rem);
+  margin-top: clamp(2rem, 5vw, 4rem);
+}
+
+/* contents: the project's wire, with a node at every section */
+.toc {
+  align-self: start;
+  position: sticky;
+  top: 1.5rem;
+  font-size: var(--step--1);
+}
+.toc ol {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+  border-left: var(--wire-w) solid var(--c);
+}
+.toc li {
+  position: relative;
+}
+.toc a {
+  display: block;
+  padding: 0.4rem 0 0.4rem 1.25rem;
+  line-height: 1.3;
+  color: var(--graphite);
+  text-decoration: none;
+}
+.toc a::before {
+  content: '';
+  position: absolute;
+  left: calc(-6px - var(--wire-w) / 2);
+  top: 0.62rem;
+  width: 12px;
+  height: 12px;
+  border: var(--wire-w) solid var(--c);
+  border-radius: 50%;
+  background: var(--vellum);
+}
+.toc a:hover {
+  color: var(--ink);
+}
+.toc a[aria-current='true'] {
+  color: var(--ink);
+  font-weight: 700;
+}
+.toc a[aria-current='true']::before {
+  background: var(--c);
+}
+
+.post-main {
+  min-width: 0;
+  container-type: inline-size;
+}
+
+@media (max-width: 980px) {
+  .post-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .toc {
+    position: static;
+  }
+}
+
+/* prose */
+.prose {
+  max-width: 44rem;
+}
+.prose > * + * {
+  margin-top: 1.1em;
+}
+.prose h2 {
+  font-size: var(--step-3);
+  margin-top: 2.2em;
+}
+.prose > h2:first-child {
+  margin-top: 0;
+}
+.prose h3 {
+  font-size: var(--step-2);
+  font-weight: 700;
+  margin-top: 1.8em;
+}
+.prose li + li {
+  margin-top: 0.35em;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.3em;
+}
+.prose :not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: var(--bench);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+}
+.prose pre {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  overflow-x: auto;
+  line-height: 1.5;
+}
+@media (prefers-color-scheme: dark) {
+  .astro-code,
+  .astro-code span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+  }
+}
+.prose blockquote {
+  margin-inline: 0;
+  padding-left: 1.25rem;
+  border-left: var(--wire-w) solid var(--rule);
+  color: var(--graphite);
+}
+
+/* numbered build steps: the content is a sequence, so it gets numbers */
+.steps {
+  counter-reset: step;
+}
+.steps h3 {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  align-items: baseline;
+}
+.steps h3::before {
+  content: counter(step);
+  font-size: 1.15em;
+  font-weight: 900;
+  color: var(--c);
+}
+
+/* tables (BOM, pinout, anything in markdown) */
+.table-scroll {
+  overflow-x: auto;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+.prose th,
+.prose td {
+  padding: 0.6rem 0.9rem 0.6rem 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--rule);
+}
+.prose thead th {
+  font-size: var(--step--1);
+  font-weight: 400;
+  color: var(--graphite);
+  border-bottom: 1.5px solid var(--ink);
+}
+.prose td.num,
+.prose th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.prose tfoot td {
+  border-bottom: 0;
+  font-weight: 700;
+}
+.swatch {
+  display: inline-block;
+  width: 2.2rem;
+  height: 0.55rem;
+  margin-right: 0.6rem;
+  border-radius: 99px;
+  background: var(--sw);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 25%, transparent);
+  vertical-align: middle;
+}
+
+/* figures */
+.prose figure {
+  margin: 2em 0;
+  counter-increment: fig;
+}
+.prose {
+  counter-reset: fig;
+}
+.prose figure.wide {
+  width: min(100cqw, 58rem);
+}
+.prose figure img,
+.prose figure svg {
+  width: 100%;
+  border-radius: var(--radius);
+}
+.prose figcaption {
+  margin-top: 0.6rem;
+  font-size: var(--step--1);
+  line-height: 1.4;
+  color: var(--graphite);
+}
+.prose figcaption::before {
+  content: 'Fig. ' counter(fig) '\2002';
+  font-weight: 700;
+  color: var(--ink);
+}
+.photo-slot {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 3 / 2;
+  padding: 1.5rem;
+  border: 2px dashed var(--rule);
+  border-radius: var(--radius);
+  text-align: center;
+  color: var(--graphite);
+  font-size: var(--step--1);
+}
+
+/* callouts */
+.callout {
+  padding: 1rem 1.25rem;
+  background: var(--bench);
+  border-left: 5px solid var(--k);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.callout > :last-child {
+  margin-bottom: 0;
+}
+.callout strong:first-child {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.callout.warning { --k: var(--wire-red); }
+.callout.note { --k: var(--wire-blue); }
+.callout.tip { --k: var(--wire-green); }
+
+.todo {
+  padding: 0.75rem 1rem;
+  border: 2px dashed var(--wire-amber);
+  border-radius: var(--radius);
+  font-size: var(--step--1);
+  line-height: 1.45;
+}
+.todo::before {
+  content: 'To write: ';
+  font-weight: 700;
+}
+.todo p {
+  display: inline;
+}
+
+/* files and downloads */
+.section-h {
+  font-size: var(--step-3);
+  margin: 4rem 0 1.25rem;
+}
+.files {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1.5px solid var(--ink);
+  max-width: 44rem;
+}
+.files li {
+  border-bottom: 1px solid var(--rule);
+}
+.files a {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+  gap: 0.25rem 1rem;
+  align-items: baseline;
+  padding: 0.85rem 0;
+  text-decoration: none;
+}
+.files .kind {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  font-weight: 700;
+  color: var(--c);
+}
+.files .label {
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+.files a:hover .label {
+  text-decoration-color: var(--c);
+}
+.files .note {
+  display: block;
+  font-weight: 400;
+  font-size: var(--step--1);
+  color: var(--graphite);
+}
+.files .size {
+  font-size: var(--step--1);
+  color: var(--graphite);
+  font-variant-numeric: tabular-nums;
+}
+
+.comments-intro {
+  max-width: 44rem;
+  color: var(--graphite);
+}
+.comments-box {
+  max-width: 44rem;
+  min-height: 8rem;
+}
+.comments-off {
+  padding: 1rem 1.25rem;
+  border: 2px dashed var(--rule);
+  border-radius: var(--radius);
+  color: var(--graphite);
+  font-size: var(--step--1);
+}
+
+/* about */
+.about {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  padding-block: clamp(1.5rem, 5vw, 3.5rem) 0;
+}
+.about h1 {
+  font-size: var(--step-5);
+  font-weight: 900;
+  line-height: 0.88;
+  margin-bottom: 2rem;
+}
+
+/* two figures side by side */
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.pair figure {
+  margin: 0;
+}
+.pair figure img {
+  aspect-ratio: var(--ratio, auto);
+  object-fit: cover;
+}
+@media (max-width: 560px) {
+  .pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* connector pin diagram */
+.pinfaces-row {
+  background: var(--bench);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1.25rem 1rem 0.5rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+.pinfaces-row svg {
+  width: min(100%, 15rem);
+  margin-inline: auto;
+}
+.pinfaces-row text {
+  font-family: var(--text);
+}
+.pinfaces-row p {
+  margin: 0.5rem 0 0.75rem;
+  text-align: center;
+  font-size: var(--step--1);
+  line-height: 1.35;
+  color: var(--graphite);
+}
+.pinfaces-row strong {
+  color: var(--ink);
+}
+
+/* photos: hairline frame, click to enlarge */
+.prose figure img {
+  box-shadow: 0 0 0 1px var(--rule);
+  cursor: zoom-in;
+}
+.lightbox {
+  max-width: none;
+  max-height: none;
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  padding: clamp(0.75rem, 3vw, 2.5rem);
+  border: 0;
+  background: color-mix(in srgb, #05080b 92%, transparent);
+  cursor: zoom-out;
+}
+.lightbox[open] {
+  display: grid;
+  place-items: center;
+}
+.lightbox::backdrop {
+  background: #05080b;
+}
+.lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radius);
+}
+.lightbox button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.4rem 0.9rem;
+  border: 1.5px solid #e4eaf0;
+  border-radius: var(--radius);
+  background: #111820;
+  color: #e4eaf0;
+  font: inherit;
+  font-size: var(--step--1);
+  cursor: pointer;
+}
+
+/* numbered markers on an image, with a key underneath */
+.annotated-stage {
+  position: relative;
+}
+.mark {
+  position: absolute;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: #f5f7f8;
+  color: #121a23;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 2px #121a23, 0 0 0 5px var(--mc, transparent);
+  pointer-events: none;
+}
+.prose .marks-key {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+  gap: 0.5rem 1.5rem;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: mark;
+  font-size: var(--step--1);
+  line-height: 1.35;
+}
+.prose .marks-key li {
+  counter-increment: mark;
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  margin: 0;
+}
+.marks-key li::before {
+  content: counter(mark);
+  grid-row: span 2;
+  font-weight: 700;
+  color: var(--c);
+}
+.marks-key span {
+  grid-column: 2;
+  color: var(--graphite);
+}
+@media (max-width: 560px) {
+  .mark {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.72rem;
+  }
+}
+
+/* vector diagrams */
+.diagram-scroll {
+  overflow-x: auto;
+  padding: 1.25rem 1.25rem 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--bench);
+}
+.diagram svg {
+  min-width: 30rem;
+  width: 100%;
+  border-radius: 0;
+}
+.diagram text {
+  font-family: var(--text);
+  fill: var(--ink);
+}
+.diagram .d-strong { font-size: 19px; font-weight: 700; }
+.diagram .d-text { font-size: 17.5px; }
+.diagram .d-small { font-size: 15.5px; fill: var(--graphite); }
+.diagram .d-mono { font-family: var(--mono); font-size: 16px; font-weight: 600; }
+.diagram .d-pin { font-size: 15px; font-weight: 700; }
+.diagram .d-onfill { font-size: 15.5px; font-weight: 600; fill: #ffffff; }
+.diagram .d-box { fill: var(--vellum); stroke: var(--ink); stroke-width: 1.5; }
+.diagram .d-term { fill: var(--bench); stroke: var(--ink); stroke-width: 1.5; }
+.diagram .d-lead { fill: none; stroke: var(--ink); stroke-width: 3; }

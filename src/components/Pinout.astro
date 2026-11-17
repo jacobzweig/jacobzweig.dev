@@ -1,0 +1,20 @@
+---
+// Wire-by-wire table. rows: [{ wire: 'Red', color: '#d8343f', signal: '5 V', to: 'VIN', note? }]
+interface Row { wire: string; color: string; signal: string; to: string; note?: string }
+interface Props { rows: Row[]; from?: string; to?: string }
+const { rows, from = 'Wire', to = 'Connects to' } = Astro.props;
+---
+<div class="table-scroll">
+  <table>
+    <thead><tr><th>{from}</th><th>Carries</th><th>{to}</th></tr></thead>
+    <tbody>
+      {rows.map((r) => (
+        <tr>
+          <td><span class="swatch" style={`--sw:${r.color}`}></span>{r.wire}</td>
+          <td>{r.signal}{r.note && <span class="muted"><br />{r.note}</span>}</td>
+          <td><code>{r.to}</code></td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

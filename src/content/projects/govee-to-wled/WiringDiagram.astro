@@ -1,0 +1,61 @@
+---
+// Brick -> jack -> An-Penta-Plus -> five wires -> adapter pins.
+const wires = [
+  { term: '+', pin: 5, name: '+36 V', color: '#d8343f' },
+  { term: 'L1', pin: 3, name: 'Cool white', color: '#f5f7f8' },
+  { term: 'L2', pin: 4, name: 'Warm white', color: '#e9c21a' },
+  { term: 'Data Out', pin: 2, name: 'Data', color: '#14906a' },
+  { term: 'GND', pin: 1, name: 'Ground', color: '#1b242e' },
+];
+const ty = (i: number) => 122 + i * 43;      // terminal y on the controller
+const by = (i: number) => 176 + i * 7;      // y inside the cable bundle
+const py = (i: number) => 96 + i * 47;      // pin y at the adapter
+const path = (i: number) =>
+  `M 462 ${ty(i)} C 530 ${ty(i)}, 520 ${by(i)}, 580 ${by(i)} L 700 ${by(i)} C 760 ${by(i)}, 750 ${py(i)}, 812 ${py(i)}`;
+---
+<figure class="diagram wide">
+  <div class="diagram-scroll">
+    <svg viewBox="0 0 1000 380" role="img" aria-label="Wiring diagram: the 36 volt brick plugs into a DC jack feeding the An-Penta-Plus. Five wires run from its terminals through one cable to the adapter pins.">
+      <!-- power in -->
+      <rect x="14" y="160" width="104" height="64" rx="6" class="d-box" />
+      <text x="66" y="188" text-anchor="middle" class="d-strong">Govee</text>
+      <text x="66" y="207" text-anchor="middle" class="d-text">36 V brick</text>
+      <path d="M 118 192 H 158" class="d-lead" />
+      <rect x="158" y="178" width="30" height="28" rx="4" class="d-box" />
+      <text x="173" y="228" text-anchor="middle" class="d-small">DC jack</text>
+      <path d="M 188 192 H 232" class="d-lead" />
+
+      <!-- controller -->
+      <rect x="232" y="52" width="230" height="280" rx="10" class="d-box" />
+      <text x="252" y="84" class="d-strong">An-Penta-Plus</text>
+      <text x="252" y="104" class="d-small">runs WLED</text>
+      {wires.map((w, i) => (
+        <g>
+          <rect x="372" y={ty(i) - 15} width="90" height="30" rx="4" class="d-term" />
+          <text x="417" y={ty(i) + 5} text-anchor="middle" class="d-mono">{w.term}</text>
+        </g>
+      ))}
+
+      <!-- wires -->
+      {wires.map((w, i) => (
+        <g fill="none" stroke-linecap="round">
+          <path d={path(i)} stroke="var(--graphite)" stroke-width="8.5" />
+          <path d={path(i)} stroke={w.color} stroke-width="5" />
+        </g>
+      ))}
+      <rect x="588" y="166" width="104" height="48" rx="24" fill="var(--housing)" stroke="var(--graphite)" stroke-width="1.5" />
+      <text x="640" y="240" text-anchor="middle" class="d-small">one 5-core cable</text>
+
+      <!-- adapter pins -->
+      <text x="812" y="52" class="d-strong">Adapter pin</text>
+      {wires.map((w, i) => (
+        <g>
+          <circle cx="826" cy={py(i)} r="14" fill={w.color} stroke="var(--graphite)" stroke-width="1.5" />
+          <text x="826" y={py(i) + 5} text-anchor="middle" class="d-pin" style={`fill:${w.color === '#f5f7f8' || w.color === '#e9c21a' ? '#121a23' : '#ffffff'}`}>{w.pin}</text>
+          <text x="852" y={py(i) + 5} class="d-text">{w.name}</text>
+        </g>
+      ))}
+    </svg>
+  </div>
+  <figcaption>The whole installation. Power goes in one end of the controller, five wires come out the other, and one cable carries them to the strip.</figcaption>
+</figure>

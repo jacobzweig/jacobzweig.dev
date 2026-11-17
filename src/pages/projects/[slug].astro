@@ -1,0 +1,119 @@
+---
+import { Image } from 'astro:assets';
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Cover from '../../components/Cover.astro';
+import Comments from '../../components/Comments.astro';
+import Figure from '../../components/Figure.astro';
+import Bom from '../../components/Bom.astro';
+import Pinout from '../../components/Pinout.astro';
+import Callout from '../../components/Callout.astro';
+import Steps from '../../components/Steps.astro';
+import Todo from '../../components/Todo.astro';
+import Pair from '../../components/Pair.astro';
+import Annotated from '../../components/Annotated.astro';
+import { getProjects, slugOf, fmtDate } from '../../lib/projects';
+
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  return projects.map((project) => ({ params: { slug: slugOf(project.id) }, props: { project } }));
+}
+
+const { project } = Astro.props;
+const d = project.data;
+const { Content, headings } = await render(project);
+const sections = [
+  ...headings.filter((h) => h.depth === 2).map((h) => ({ id: h.slug, text: h.text })),
+  ...(d.files.length ? [{ id: 'files', text: 'Files' }] : []),
+  { id: 'comments', text: 'Comments' },
+];
+const external = (href: string) => /^https?:/.test(href);
+---
+
+<Base title={d.title} description={d.summary} image={d.cover?.src} wire={d.wire}>
+  <article>
+    <header class="post-head">
+      {d.draft && <span class="draft-flag">Draft, not published</span>}
+      <h1>{d.title}</h1>
+      <p class="lede">{d.summary}</p>
+      <dl class="titleblock">
+        {d.difficulty && <div><dt>Difficulty</dt><dd>{d.difficulty}</dd></div>}
+        {d.time && <div><dt>Time</dt><dd>{d.time}</dd></div>}
+        {d.cost && <div><dt>Cost</dt><dd>{d.cost}</dd></div>}
+        <div><dt>Published</dt><dd><time datetime={d.date.toISOString()}>{fmtDate(d.date)}</time></dd></div>
+        {d.updated && <div><dt>Updated</dt><dd><time datetime={d.updated.toISOString()}>{fmtDate(d.updated)}</time></dd></div>}
+        {d.tools.length > 0 && <div class="wide"><dt>Tools</dt><dd>{d.tools.join(', ')}</dd></div>}
+      </dl>
+    </header>
+
+    <div class="post-cover">
+      {d.cover
+        ? <Image src={d.cover} alt={d.coverAlt ?? ''} widths={[800, 1200, 1800, 2360]} sizes="(min-width: 1180px) 1100px, 100vw" loading="eager" />
+        : <Cover seed={slugOf(project.id)} wire={d.wire} />}
+    </div>
+
+    <div class="post-body">
+      <nav class="toc" aria-label="On this page">
+        <ol>
+          {sections.map((s) => <li><a href={`#${s.id}`}>{s.text}</a></li>)}
+        </ol>
+      </nav>
+
+      <div class="post-main">
+        <div class="prose">
+          <Content components={{ Figure, Bom, Pinout, Callout, Steps, Todo, Pair, Annotated }} />
+        </div>
+
+        {d.files.length > 0 && (
+          <section>
+            <h2 class="section-h" id="files">Files</h2>
+            <ul class="files">
+              {d.files.map((f) => (
+                <li>
+                  <a href={f.href} {...(external(f.href) ? { rel: 'noopener' } : { download: true })}>
+                    <span class="kind">{f.kind}</span>
+                    <span class="label">{f.label}{f.note && <span class="note">{f.note}</span>}</span>
+                    <span class="size">{f.size ?? (external(f.href) ? new URL(f.href).hostname.replace('www.', '') : '')}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <Comments />
+      </div>
+    </div>
+  </article>
+</Base>
+
+<script>
+  // Light the node for the section being read.
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')];
+  const byId = new Map(links.map((a) => [a.hash.slice(1), a]));
+  const targets = [...byId.keys()].map((id) => document.getElementById(id)).filter((el) => el !== null);
+  const setActive = () => {
+    let current = targets[0];
+    for (const t of targets) if (t.getBoundingClientRect().top < window.innerHeight * 0.35) current = t;
+    links.forEach((a) => a.removeAttribute('aria-current'));
+    if (current) byId.get(current.id)?.setAttribute('aria-current', 'true');
+  };
+  document.addEventListener('scroll', setActive, { passive: true });
+  setActive();
+
+  // Click a photo to see it large.
+  const box = document.createElement('dialog');
+  box.className = 'lightbox';
+  box.innerHTML = '<img alt="" /><button type="button" aria-label="Close">Close</button>';
+  document.body.append(box);
+  const big = box.querySelector('img')!;
+  box.addEventListener('click', () => box.close());
+  document.querySelectorAll<HTMLImageElement>('.prose figure img').forEach((img) => {
+    img.tabIndex = 0;
+    img.setAttribute('role', 'button');
+    img.setAttribute('aria-label', `Enlarge: ${img.alt}`);
+    const open = () => { big.src = img.src; big.alt = img.alt; box.showModal(); };
+    img.addEventListener('click', open);
+    img.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  });
+</script>
