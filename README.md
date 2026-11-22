@@ -22,6 +22,17 @@ Project write-ups. Astro, static output, no backend. Comments run on GitHub Disc
 
 Site-wide text, the "on the bench" list and the giscus IDs are in `src/site.config.ts`. The About page is `src/pages/about.astro`.
 
+## Visitor and download counts
+
+Counting runs on [GoatCounter](https://www.goatcounter.com): no cookies, no consent banner. It is off
+until `analytics.goatcounter` in `src/site.config.ts` holds the site code (the `mycode` in
+`mycode.goatcounter.com`). Page views, referrers, browsers and countries then show on that dashboard.
+
+Every link in a post's Files list reports a click event, named `download/<project>/<file>` for files
+in `public/files/` and `link/<project>/<host>` for external ones. Those events are the download
+counts. A file fetched by its direct URL, without a click on the post, is not counted, because
+GitHub Pages keeps no server logs. Visits from `localhost` are never counted.
+
 ## Deploy
 
 Pushing to `main` builds and publishes to GitHub Pages (`.github/workflows/deploy.yml`). `public/CNAME` sets the domain.

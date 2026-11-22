@@ -15,6 +15,14 @@ export const site = {
     category: 'Announcements',
     categoryId: 'DIC_kwDOVxSNy84DLUFB',
   },
+
+  // Visitor and download counts run on GoatCounter (https://www.goatcounter.com).
+  // It sets no cookies and keeps no personal data, so there is no consent banner.
+  // `goatcounter` is the site code: the "mycode" in mycode.goatcounter.com.
+  // Leave it empty to switch counting off.
+  analytics: {
+    goatcounter: 'jacobzweig',
+  },
 };
 
 // Things in progress that don't have a write-up yet. They show on the home

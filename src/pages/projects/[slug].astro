@@ -28,6 +28,13 @@ const sections = [
   { id: 'comments', text: 'Comments' },
 ];
 const external = (href: string) => /^https?:/.test(href);
+const host = (href: string) => new URL(href).hostname.replace('www.', '');
+// Each file link reports its click to the visitor counter, which is where the
+// download counts come from: "download/<project>/<file>" for files hosted here,
+// "link/<project>/<host>" for ones that live elsewhere.
+const slug = slugOf(project.id);
+const clickName = (href: string) =>
+  external(href) ? `link/${slug}/${host(href)}` : `download/${slug}/${href.split('/').pop()}`;
 ---
 
 <Base title={d.title} description={d.summary} image={d.cover?.src} wire={d.wire}>
@@ -49,7 +56,7 @@ const external = (href: string) => /^https?:/.test(href);
     <div class="post-cover">
       {d.cover
         ? <Image src={d.cover} alt={d.coverAlt ?? ''} widths={[800, 1200, 1800, 2360]} sizes="(min-width: 1180px) 1100px, 100vw" loading="eager" />
-        : <Cover seed={slugOf(project.id)} wire={d.wire} />}
+        : <Cover seed={slug} wire={d.wire} />}
     </div>
 
     <div class="post-body">
@@ -70,10 +77,14 @@ const external = (href: string) => /^https?:/.test(href);
             <ul class="files">
               {d.files.map((f) => (
                 <li>
-                  <a href={f.href} {...(external(f.href) ? { rel: 'noopener' } : { download: true })}>
+                  <a
+                    href={f.href}
+                    data-goatcounter-click={clickName(f.href)}
+                    data-goatcounter-title={f.label}
+                    {...(external(f.href) ? { rel: 'noopener' } : { download: true })}>
                     <span class="kind">{f.kind}</span>
                     <span class="label">{f.label}{f.note && <span class="note">{f.note}</span>}</span>
-                    <span class="size">{f.size ?? (external(f.href) ? new URL(f.href).hostname.replace('www.', '') : '')}</span>
+                    <span class="size">{f.size ?? (external(f.href) ? host(f.href) : '')}</span>
                   </a>
                 </li>
               ))}
